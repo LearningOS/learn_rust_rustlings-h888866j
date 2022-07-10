@@ -16,7 +16,7 @@
 // 4. Complete the partial implementation of `Display` for
 //    `ParseClimateError`.
 
-// I AM NOT DONE
+
 
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
@@ -55,9 +55,15 @@ impl From<ParseFloatError> for ParseClimateError {
 // is not necessary to implement any methods inside the missing trait.
 impl Error for ParseClimateError{
     
-    // fn source(&self) -> Option<&(dyn Error + 'static)> {
-    //     Some(&self.source)
-    // }
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match &self{
+            ParseClimateError::BadLen => {None},
+            ParseClimateError::Empty => {None},
+            ParseClimateError::NoCity => {None},
+            ParseClimateError::ParseInt(e) => {Some(e)},
+            ParseClimateError::ParseFloat(e) => {Some(e)},
+        }
+    }
 }
 // The `Display` trait allows for other code to obtain the error formatted
 // as a user-visible string.
