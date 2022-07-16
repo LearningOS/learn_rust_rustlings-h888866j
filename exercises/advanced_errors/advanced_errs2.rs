@@ -61,7 +61,9 @@ impl Error for ParseClimateError{
             ParseClimateError::Empty => {None},
             ParseClimateError::NoCity => {None},
             ParseClimateError::ParseInt(e) => {Some(e)},
+            // ParseClimateError::ParseInt(ref e) => {Some(e)},
             ParseClimateError::ParseFloat(e) => {Some(e)},
+            // ParseClimateError::ParseFloat(ref e) => {Some(e)},
         }
     }
 }
@@ -79,6 +81,7 @@ impl Display for ParseClimateError {
             Empty => write!(f,"empty input"),
             BadLen => write!(f,"incorrect number of fields"),
             ParseInt(e) => write!(f,"error parsing year: {}",e)
+            // ParseInt(ref e) => write!(f,"error parsing year: {}",e)
         }
     }
 }
