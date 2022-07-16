@@ -8,7 +8,6 @@
 
 // Make these tests pass! Execute `rustlings hint errors6` for hints :)
 
-// I AM NOT DONE
 
 use std::num::ParseIntError;
 
@@ -21,6 +20,12 @@ enum ParsePosNonzeroError {
 
 impl ParsePosNonzeroError {
     // TODO: add another error conversion function here.
+    fn from_creation(e: CreationError) -> ParsePosNonzeroError{
+        ParsePosNonzeroError::Creation(e)
+    }
+    fn from_parse(e: ParseIntError) -> ParsePosNonzeroError{
+        ParsePosNonzeroError::ParseInt(e)
+    }
 }
 
 fn parse_pos_nonzero(s: &str)
@@ -28,10 +33,54 @@ fn parse_pos_nonzero(s: &str)
 {
     // TODO: change this to return an appropriate error instead of panicking
     // when `parse()` returns an error.
-    let x: i64 = s.parse().unwrap();
+
+    let x:i64 = s.parse()
+        .map_err(|e| ParsePosNonzeroError::ParseInt(e))?;
+
+    // the whole `.map_err(xxx)?;` is equivalent to the following `match`
+    let x = match s.parse::<i64>(){
+        Ok(v) => v,
+        Err(e) => return  Err(ParsePosNonzeroError::ParseInt(e))
+    };
+
+    // `.map_err(xxx)` method is equivalent to the following `match`
+    let x: i64 = match s.parse::<i64>(){
+        Ok(v) => Ok(v), // leave untouched
+        Err(e) => Err(ParsePosNonzeroError::ParseInt(e))
+    }?; // usage of `?`.
+
+    // map_err 里自然也可以不用闭包，用和下面类似的方式写一个函数(参数要标注类型)传进去, 然后也得接？提取值和抛出错误
+    let x = s.parse::<i64>().map_err(ParsePosNonzeroError::from_parse)?;
+
+    // 有没有其他方法可用呢，  `map_or_else` 配合 `?` 也可以，就是麻烦
+    let x = s.parse::<i64>()
+        .map_or_else( |w|Err(ParsePosNonzeroError::ParseInt(w)),
+                      |q|Ok(q))?;
+
+    // 单独的 `?` 也可以用match替换
+     let x = match s.parse::<i64>()
+        .map_or_else( |w|Err(ParsePosNonzeroError::ParseInt(w)),
+                      |q|Ok(q))
+     {
+         Ok(v) => v,
+         Err(e) => return Err(e)
+     };
+
+    // Likewise，the `?`after `.map_err(xxx)` is equivalent to the following `match`
+    let x: i64 = match s.parse::<i64>().map_err(|e|ParsePosNonzeroError::ParseInt(e)){
+        Ok(v) => v,
+        Err(e) => return Err(e) // Err untouched, just return it
+    };
+
     PositiveNonzeroInteger::new(x)
         .map_err(ParsePosNonzeroError::from_creation)
+
+    // match PositiveNonzeroInteger::new(x){
+    //     Ok(r) => Ok(r),
+    //     Err(t) => Err(ParsePosNonzeroError::Creation(t))
+    // }
 }
+
 
 // Don't change anything below this line.
 

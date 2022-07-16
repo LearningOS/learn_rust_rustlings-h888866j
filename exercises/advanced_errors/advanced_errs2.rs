@@ -16,7 +16,7 @@
 // 4. Complete the partial implementation of `Display` for
 //    `ParseClimateError`.
 
-// I AM NOT DONE
+
 
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
@@ -47,12 +47,26 @@ impl From<ParseIntError> for ParseClimateError {
 impl From<ParseFloatError> for ParseClimateError {
     fn from(e: ParseFloatError) -> Self {
         // TODO: Complete this function
+        Self::ParseFloat(e)
     }
 }
 
 // TODO: Implement a missing trait so that `main()` below will compile. It
 // is not necessary to implement any methods inside the missing trait.
-
+impl Error for ParseClimateError{
+    
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match &self{
+            ParseClimateError::BadLen => {None},
+            ParseClimateError::Empty => {None},
+            ParseClimateError::NoCity => {None},
+            ParseClimateError::ParseInt(e) => {Some(e)},
+            // ParseClimateError::ParseInt(ref e) => {Some(e)},
+            ParseClimateError::ParseFloat(e) => {Some(e)},
+            // ParseClimateError::ParseFloat(ref e) => {Some(e)},
+        }
+    }
+}
 // The `Display` trait allows for other code to obtain the error formatted
 // as a user-visible string.
 impl Display for ParseClimateError {
@@ -64,6 +78,10 @@ impl Display for ParseClimateError {
         match self {
             NoCity => write!(f, "no city name"),
             ParseFloat(e) => write!(f, "error parsing temperature: {}", e),
+            Empty => write!(f,"empty input"),
+            BadLen => write!(f,"incorrect number of fields"),
+            ParseInt(e) => write!(f,"error parsing year: {}",e)
+            // ParseInt(ref e) => write!(f,"error parsing year: {}",e)
         }
     }
 }
@@ -87,12 +105,16 @@ impl FromStr for Climate {
     type Err = ParseClimateError;
     // TODO: Complete this function by making it handle the missing error
     // cases.
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {        
+        if s.len() == 0 {return Err(ParseClimateError::Empty)}
         let v: Vec<_> = s.split(',').collect();
+        // if v.len() != 3 {return Err(ParseClimateError::BadLen)}
+        // if v.iter().any(|x|x==&"") {return Err(ParseClimateError::Empty)}
         let (city, year, temp) = match &v[..] {
             [city, year, temp] => (city.to_string(), year, temp),
             _ => return Err(ParseClimateError::BadLen),
         };
+        if city == "".to_string() {return Err(ParseClimateError::NoCity)}
         let year: u32 = year.parse()?;
         let temp: f32 = temp.parse()?;
         Ok(Climate { city, year, temp })
@@ -190,7 +212,7 @@ mod test {
         );
     }
     #[test]
-    #[ignore]
+    // #[ignore]
     fn test_downcast() {
         let res = "São Paulo,-21,28.5".parse::<Climate>();
         assert!(matches!(res, Err(ParseClimateError::ParseInt(_))));
